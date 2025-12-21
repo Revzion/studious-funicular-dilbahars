@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* body {
+    font-family: "Playpen Sans", cursive;
+} */
+
+/* html, body {
+  font-family: var(--font-patrick-hand), cursive;
+} */
+
+html, body {
+  font-family: var(--font-comic-neue), cursive;
+}
+
+/* h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-roboto), sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+} */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter), sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+
+
+
+
+html {
+  scroll-behavior: smooth;
+}
+       .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #3B82F6;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #2563EB;
+        }
+
+.animate-from-left {
+    opacity: 0;
+    transform: translateX(-100px);
+    transition: all 0.8s ease-out;
+    overflow-x: hidden;
+}
+
+.animate-from-right {
+    opacity: 0;
+    transform: translateX(100px);
+    transition: all 0.8s ease-out;
+}
+
+.fade-in {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+}
+
+
+
+@keyframes certificate-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.certificate-scroll {
+  animation: certificate-scroll 30s linear infinite;
+}
+
+   .candy-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    
+  }
+
+  .candy-emoji {
+    position: absolute;
+    font-size: 4rem;
+    opacity: 0.4;
+    color: #1e40af;
+    animation: candyFloat 12s ease-in-out infinite, candyRotate 8s linear infinite;
+    filter: drop-shadow(3px 3px 6px rgba(30, 64, 175, 0.4));
+    transition: transform 0.3s ease-out;
+  }
+
+  .candy-emoji:nth-child(1) {
+    color: #1e40af;
+    animation-delay: 0s;
+    animation-duration: 10s, 6s;
+  }
+
+  .candy-emoji:nth-child(2) {
+    color: #059669;
+    animation-delay: -3s;
+    animation-duration: 14s, 9s;
+    font-size: 3.5rem;
+  }
+
+  .candy-emoji:nth-child(3) {
+    color: #0d9488;
+    animation-delay: -6s;
+    animation-duration: 16s, 7s;
+    font-size: 3rem;
+  }
+
+  
+
+  @keyframes candyRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes candyPulse {
+    0%, 100% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.3); opacity: 0.8; }
+  }
+
+  .candy-emoji.scroll-animated {
+    animation: candyFloat 12s ease-in-out infinite, candyRotate 8s linear infinite, candyPulse 4s ease-in-out infinite;
+  }
+
+  @media (max-width: 768px) {
+    .candy-emoji {
+      font-size: 2.5rem;
+      opacity: 0.3;
+    }
+  }
+  
