@@ -1,13 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    async rewrites() {
-        return [
-            {
-                source: '/api/:path*',
-                destination: 'https://jgq28ngcpf.us-east-1.awsapprunner.com/api/:path*',
-            },
-        ];
-    },
-};
+const nextConfig = {};
 
 export default nextConfig;
