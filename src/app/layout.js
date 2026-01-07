@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import {
   Geist,
   Geist_Mono,
@@ -12,16 +13,6 @@ import AppInitializer from "./AppInitializer";
 import ToastContainer from "@/components/Toast/Toast";
 import ProtectedRoute from "@/components/protectedroutes/ProtectedRouteB2C";
 
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
-
 const patrickHand = Patrick_Hand({
   variable: "--font-patrick-hand",
   weight: ["400"],
@@ -31,22 +22,15 @@ const patrickHand = Patrick_Hand({
 
 const comicNeue = Comic_Neue({
   variable: "--font-comic-neue",
-  weight: ["400"], // You can also add "700" if needed
+  weight: ["400"],
   subsets: ["latin"],
-  display: "swap",
-});
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"], // you can add more if needed
-  variable: "--font-roboto",
   display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"], // Add weights as needed
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -58,15 +42,38 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      > */}
+      <head>
+        {/* Google Tag Manager */}
+        <Script id="gtm-script" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-MLBFWNF');
+          `}
+        </Script>
+        {/* End Google Tag Manager */}
+      </head>
+
       <body className={`${comicNeue.variable} ${inter.variable} antialiased`}>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-MLBFWNF"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          ></iframe>
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
+
         <ReduxProvider>
           <AppInitializer>
             <ProtectedRoute>{children}</ProtectedRoute>
           </AppInitializer>
         </ReduxProvider>
+
         <ToastContainer />
       </body>
     </html>

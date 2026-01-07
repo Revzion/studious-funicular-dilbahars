@@ -241,7 +241,7 @@ export default function Cart2() {
 
   useEffect(() => {
     let timeout;
-    if (!cartInitialized && isAuthenticated) {
+    if (!cartInitialized) {
       setAppliedCoupon(null);
       setCouponInput("");
       dispatch(fetchCartItems())
