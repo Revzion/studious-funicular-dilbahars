@@ -57,6 +57,13 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={`${comicNeue.variable} ${inter.variable} antialiased`}>
+      <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+      <df-messenger
+          intent="WELCOME"
+          chat-title="Dilbahar&#x27;s"
+          agent-id="8c28cdbc-5a02-49e4-94aa-7c3fa18235b0"
+          language-code="en"
+      ></df-messenger>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

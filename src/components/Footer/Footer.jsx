@@ -294,7 +294,7 @@ export default function Footer() {
           </a>
           .
         </div>
-        <BackToTopButton />
+        {/*<BackToTopButton />*/}
       </footer>
     </div>
   );
