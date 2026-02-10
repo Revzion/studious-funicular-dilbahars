@@ -131,7 +131,7 @@ export default function ShopByCategory() {
 
   // Fallback image if API doesn't provide one
   const fallbackImage =
-    "https://dilbahars.com/wp-content/uploads/2024/09/3.png";
+    "/Dilbahars-logo.png";
 
   useEffect(() => {
     const fetchCategories = async () => {
