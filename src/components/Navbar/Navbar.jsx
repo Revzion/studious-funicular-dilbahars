@@ -400,7 +400,7 @@ export default function Navbar() {
                 <Link href="/" passHref>
                   <div className="logo-container text-2xl font-bold flex items-center justify-center cursor-pointer">
                     <img
-                      src="https://dilbahars.com/wp-content/uploads/2024/09/Dilbahars-e1726221534608.png"
+                      src="/Dilbahars-logo.png"
                       width={100}
                       alt="Dilbahar's"
                     />
