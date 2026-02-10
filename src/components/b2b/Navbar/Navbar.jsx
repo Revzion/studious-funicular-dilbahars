@@ -92,7 +92,7 @@ const Navbar = ({ cartLength }) => {
           <Link href="/dealer" passHref>
             <div className="logo-container text-2xl font-bold flex items-center justify-center cursor-pointer">
               <img
-                src="/logo.png"
+                src="/Dilbahars-logo.png"
                 width={100}
                 alt="Dilbahar's"
               />
