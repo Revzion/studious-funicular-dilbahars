@@ -702,11 +702,7 @@ export default function ProductCard({ product, onClick, onAddToCart }) {
                   }}
                   transition={{ duration: 0.5 }}
                 >
-                  {isQuantityLoading ? (
-                    <div className="w-4 h-4 border-2 border-blue-900 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    quantity
-                  )}
+                  {quantity}
                 </motion.div>
 
                 <motion.button

@@ -57,7 +57,7 @@ export default function ProductList({onProductSelect}) {
       search,
       categories,
       page: parseInt(searchParams.get("page")) || 1,
-      limit: 10,
+      limit: 12,
     };
   };
 
@@ -444,7 +444,7 @@ export default function ProductList({onProductSelect}) {
           search: searchParams.get("search") || "",
           categories: [],
           page: parseInt(searchParams.get("page")) || 1,
-          limit: 10,
+          limit: 12,
         };
 
         const categoryTitle = searchParams.get("category");
@@ -455,7 +455,7 @@ export default function ProductList({onProductSelect}) {
           initialFilters.categories = [categoryIdToTitle[categoryId]];
         }
 
-        setFilters(initialFilters);
+        // setFilters(initialFilters);
 
         // Fetch products
         const productsResponse = await fetchProducts({
@@ -497,7 +497,12 @@ export default function ProductList({onProductSelect}) {
     const categoryId = searchParams.get("categoryId");
 
     setFilters((prev) => {
-      const newFilters = {...prev, search: newSearch, page: 1};
+      const newFilters = {
+  ...prev,
+  search: newSearch,
+  page: parseInt(searchParams.get("page")) || prev.page,
+};
+
       if (categoryTitle && categoryTitleToId[categoryTitle]) {
         newFilters.categories = [categoryTitle];
       } else if (categoryId && categoryMap[categoryId]) {
@@ -598,7 +603,7 @@ export default function ProductList({onProductSelect}) {
   );
 
   const clearAllFilters = useCallback(() => {
-    const clearedFilters = {search: "", categories: [], page: 1, limit: 10};
+    const clearedFilters = {search: "", categories: [], page: 1, limit: 12};
     setFilters(clearedFilters);
     setSelectedPriceRange(null);
     setSelectedRating(null);
@@ -617,22 +622,22 @@ export default function ProductList({onProductSelect}) {
     router.replace(newURL);
   }, [pathname, router, searchParams]);
 
-  useEffect(() => {
-    if (isInitialLoad) return;
+  // useEffect(() => {
+  //   if (isInitialLoad) return;
 
-    const newFilters = getInitialFilters();
-    const newPriceRange = getInitialPriceRange();
-    const newRating = getInitialRating();
-    const newSort = getInitialSort();
+  //   const newFilters = getInitialFilters();
+  //   const newPriceRange = getInitialPriceRange();
+  //   const newRating = getInitialRating();
+  //   const newSort = getInitialSort();
 
-    if (JSON.stringify(newFilters) !== JSON.stringify(filters))
-      setFilters(newFilters);
-    if (JSON.stringify(newPriceRange) !== JSON.stringify(selectedPriceRange)) {
-      setSelectedPriceRange(newPriceRange);
-    }
-    if (newRating !== selectedRating) setSelectedRating(newRating);
-    if (newSort !== selectedSort) setSelectedSort(newSort);
-  }, [searchParams]);
+  //   if (JSON.stringify(newFilters) !== JSON.stringify(filters))
+  //     setFilters(newFilters);
+  //   if (JSON.stringify(newPriceRange) !== JSON.stringify(selectedPriceRange)) {
+  //     setSelectedPriceRange(newPriceRange);
+  //   }
+  //   if (newRating !== selectedRating) setSelectedRating(newRating);
+  //   if (newSort !== selectedSort) setSelectedSort(newSort);
+  // }, [searchParams]);
 
   const totalPages = Math.ceil(total / filters.limit);
 

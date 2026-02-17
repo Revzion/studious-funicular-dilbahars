@@ -1,14 +1,14 @@
-import { createSlice } from "@reduxjs/toolkit";
+import {createSlice} from "@reduxjs/toolkit";
 
 const initialState = {
-  items: [],           // Authenticated user cart items
-  guestItems: [],      // Guest cart items with product details
+  items: [], // Authenticated user cart items
+  guestItems: [], // Guest cart items with product details
   itemCount: 0,
   subtotal: 0,
   shipping: 0,
   total: 0,
-  totalDiscount: 0,    // Added for consistency with Cart.jsx
-  status: 'idle',
+  totalDiscount: 0, // Added for consistency with Cart.jsx
+  status: "idle",
   error: null,
 };
 
@@ -18,25 +18,29 @@ const calculateShipping = (subtotal, companyProfile) => {
     return 0; // No shipping if company profile not available
   }
 
-  const { minAmount, shippingCharge } = companyProfile.shipping;
+  const {minAmount, shippingCharge} = companyProfile.shipping;
   return subtotal >= minAmount ? 0 : shippingCharge;
 };
 
 // Helper function to recalculate cart totals
 const recalculateCartTotals = (state, companyProfile = null) => {
-  state.itemCount = state.items.reduce(
-    (total, item) => total + item.product_quantity,
-    0
-  );
+  state.itemCount = state.items.length;
+
   state.subtotal = state.items.reduce(
     (total, item) =>
-      total + (item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) * item.product_quantity,
-    0
+      total +
+      (item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) *
+        item.product_quantity,
+    0,
   );
   state.totalDiscount = state.items.reduce(
     (total, item) =>
-      total + (((item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) * (item.productDetails?.discount || 0)) / 100) * item.product_quantity,
-    0
+      total +
+      (((item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) *
+        (item.productDetails?.discount || 0)) /
+        100) *
+        item.product_quantity,
+    0,
   );
   state.shipping = calculateShipping(state.subtotal, companyProfile);
   state.total = state.subtotal + state.shipping - state.totalDiscount;
@@ -44,19 +48,23 @@ const recalculateCartTotals = (state, companyProfile = null) => {
 
 // Helper function to recalculate guest cart totals
 const recalculateGuestCartTotals = (state, companyProfile = null) => {
-  state.itemCount = state.guestItems.reduce(
-    (total, item) => total + item.product_quantity,
-    0
-  );
+state.itemCount = state.guestItems.length;
+
   state.subtotal = state.guestItems.reduce(
     (total, item) =>
-      total + (item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) * item.product_quantity,
-    0
+      total +
+      (item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) *
+        item.product_quantity,
+    0,
   );
   state.totalDiscount = state.guestItems.reduce(
     (total, item) =>
-      total + (((item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) * (item.productDetails?.discount || 0)) / 100) * item.product_quantity,
-    0
+      total +
+      (((item.productDetails?.mrp || item.productDetails?.saleingPrice || 0) *
+        (item.productDetails?.discount || 0)) /
+        100) *
+        item.product_quantity,
+    0,
   );
   state.shipping = calculateShipping(state.subtotal, companyProfile);
   state.total = state.subtotal + state.shipping - state.totalDiscount;
@@ -65,7 +73,7 @@ const recalculateGuestCartTotals = (state, companyProfile = null) => {
 // Helper function to save guest cart to localStorage
 const saveGuestCartToLocalStorage = (guestItems) => {
   try {
-    localStorage.setItem('guestCart', JSON.stringify(guestItems));
+    localStorage.setItem("guestCart", JSON.stringify(guestItems));
   } catch (error) {
     console.error("Failed to save guest cart to localStorage:", error);
   }
@@ -77,9 +85,9 @@ const cartSlice = createSlice({
   reducers: {
     // Updated to include mrp and discount
     addToCart: (state, action) => {
-      const { product_id, product_quantity, productDetails } = action.payload;
+      const {product_id, product_quantity, productDetails} = action.payload;
       const existingItem = state.items.find(
-        (item) => item.product_id === product_id
+        (item) => item.product_id === product_id,
       );
 
       if (existingItem) {
@@ -104,7 +112,7 @@ const cartSlice = createSlice({
     },
 
     updateQuantity: (state, action) => {
-      const { product_id, quantity } = action.payload;
+      const {product_id, quantity} = action.payload;
       const item = state.items.find((item) => item.product_id === product_id);
 
       if (item) {
@@ -114,16 +122,16 @@ const cartSlice = createSlice({
     },
 
     removeFromCart: (state, action) => {
-      const { product_id, companyProfile } = action.payload;
+      const {product_id, companyProfile} = action.payload;
       state.items = state.items.filter(
-        (item) => item.product_id !== product_id
+        (item) => item.product_id !== product_id,
       );
 
       recalculateCartTotals(state, companyProfile);
     },
 
     setCart: (state, action) => {
-      const { items, companyProfile } = action.payload;
+      const {items, companyProfile} = action.payload;
       state.items = items || action.payload; // Support both new and old payload structure
       recalculateCartTotals(state, companyProfile);
     },
@@ -140,13 +148,14 @@ const cartSlice = createSlice({
 
     // Updated to include mrp and discount
     addGuestItem: (state, action) => {
-      const { product_id, product_quantity, productDetails } = action.payload;
+      const {product_id, product_quantity, productDetails} = action.payload;
       const existingItemIndex = state.guestItems.findIndex(
-        item => item.product_id === product_id
+        (item) => item.product_id === product_id,
       );
 
       if (existingItemIndex !== -1) {
-        state.guestItems[existingItemIndex].product_quantity += product_quantity;
+        state.guestItems[existingItemIndex].product_quantity +=
+          product_quantity;
       } else {
         state.guestItems.push({
           product_id,
@@ -168,9 +177,9 @@ const cartSlice = createSlice({
     },
 
     updateGuestItemQuantity: (state, action) => {
-      const { product_id, quantity } = action.payload;
+      const {product_id, quantity} = action.payload;
       const itemIndex = state.guestItems.findIndex(
-        item => item.product_id === product_id
+        (item) => item.product_id === product_id,
       );
 
       if (itemIndex !== -1) {
@@ -179,15 +188,17 @@ const cartSlice = createSlice({
         } else {
           state.guestItems[itemIndex].product_quantity = quantity;
         }
-        
+
         recalculateGuestCartTotals(state);
         saveGuestCartToLocalStorage(state.guestItems);
       }
     },
 
     removeGuestItem: (state, action) => {
-      const { product_id } = action.payload;
-      state.guestItems = state.guestItems.filter(item => item.product_id !== product_id);
+      const {product_id} = action.payload;
+      state.guestItems = state.guestItems.filter(
+        (item) => item.product_id !== product_id,
+      );
       recalculateGuestCartTotals(state);
       saveGuestCartToLocalStorage(state.guestItems);
     },
@@ -206,7 +217,7 @@ const cartSlice = createSlice({
 
     loadGuestItemsFromStorage: (state, action) => {
       const guestItems = action.payload || [];
-      state.guestItems = guestItems.map(item => ({
+      state.guestItems = guestItems.map((item) => ({
         ...item,
         productDetails: {
           ...item.productDetails,
@@ -252,7 +263,7 @@ export const selectCartTotal = (state) => state.cart.total;
 export const selectCartStatus = (state) => state.cart.status;
 export const selectCartError = (state) => state.cart.error;
 
-export const selectCurrentCartItems = (state, isLoggedIn) => 
+export const selectCurrentCartItems = (state, isLoggedIn) =>
   isLoggedIn ? state.cart.items : state.cart.guestItems;
 
 export default cartSlice.reducer;
