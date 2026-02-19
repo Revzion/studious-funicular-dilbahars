@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { User, Smartphone } from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {User, Smartphone} from "lucide-react";
 import {
   updateB2cProfileService,
   getProfileService,
@@ -7,9 +7,7 @@ import {
 // import { toast } from "../Toast/Toast";
 import {
   sendEmailOtpService,
-  sendPhoneOtpService,
   verifyEmailOtpService,
-  verifyPhoneOtpService,
 } from "../../services/b2cAuthServices";
 
 export const ProfileInformation = () => {
@@ -46,7 +44,7 @@ export const ProfileInformation = () => {
     try {
       setProfileLoading(true);
       const response = await getProfileService();
-      // console.log("Profile data:", response);
+      console.log("Profile data:", response);
 
       if (response.success && response.user) {
         setUser(response.user);
@@ -84,19 +82,19 @@ export const ProfileInformation = () => {
   }, [emailOtpTimer, isVerifyingEmail]);
 
   useEffect(() => {
-  let interval;
-  if (isVerifyingPhone && phoneOtpTimer > 0) {
-    interval = setInterval(() => {
-      setPhoneOtpTimer((prev) => prev - 1);
-    }, 1000);
-  } else if (phoneOtpTimer === 0) {
-    setResendPhoneOtpDisabled(false);
-  }
-  return () => clearInterval(interval);
-}, [phoneOtpTimer, isVerifyingPhone]);
+    let interval;
+    if (isVerifyingPhone && phoneOtpTimer > 0) {
+      interval = setInterval(() => {
+        setPhoneOtpTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (phoneOtpTimer === 0) {
+      setResendPhoneOtpDisabled(false);
+    }
+    return () => clearInterval(interval);
+  }, [phoneOtpTimer, isVerifyingPhone]);
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({...prev, [field]: value}));
     if (error) setError("");
     if (success) setSuccess("");
   };
@@ -120,7 +118,7 @@ export const ProfileInformation = () => {
     setEmailError("");
     setEmailSuccess("");
     try {
-      const response = await sendEmailOtpService({ email: formData.email });
+      const response = await sendEmailOtpService({email: formData.email});
       console.log("sendEmailOtp response:", response);
       setEmailSuccess(response.message);
       setIsVerifyingEmail(true);
@@ -148,7 +146,7 @@ export const ProfileInformation = () => {
     setEmailError("");
     setEmailSuccess("");
     try {
-      const response = await sendEmailOtpService({ email: formData.email });
+      const response = await sendEmailOtpService({email: formData.email});
       console.log("resendEmailOtp response:", response);
       setEmailSuccess("OTP resent successfully");
       setEmailOtpTimer(300);
@@ -157,7 +155,7 @@ export const ProfileInformation = () => {
       console.log("resendEmailOtp error:", err);
       setEmailError(err.message || "Failed to resend OTP. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -174,7 +172,7 @@ export const ProfileInformation = () => {
     setEmailError("");
     setEmailSuccess("");
     try {
-      const response = await verifyEmailOtpService({ otp: emailOtp });
+      const response = await verifyEmailOtpService({otp: emailOtp});
       console.log("verifyEmailOtp response:", response);
       setEmailSuccess(response.message);
       setIsVerifyingEmail(false);
@@ -188,106 +186,69 @@ export const ProfileInformation = () => {
     }
   };
 
-  const handleSendPhoneOtp = async () => {
-    if (!formData.mobile) {
-      setPhoneError("Please enter a phone number");
-      return;
-    }
+  const handleSaveChanges = async () => {
     setLoading(true);
-    setPhoneError("");
-    setPhoneSuccess("");
-    try {
-      const response = await sendPhoneOtpService({ phoneNo: formData.mobile });
-      setPhoneSuccess(response.message);
-      setIsVerifyingPhone(true);
-      setPhoneOtpTimer(300);
-      setResendPhoneOtpDisabled(true);
-    } catch (err) { 
-      setPhoneError(err.message || "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendPhoneOtp = async () => {
-    setLoading(true);
-    try {
-      const response = await sendPhoneOtpService({ phoneNo: formData.mobile });
-      setPhoneSuccess("OTP resent successfully");
-      setPhoneOtpTimer(300);
-      setResendPhoneOtpDisabled(true);
-    } catch (err) {
-      setPhoneError(err.message || "Failed to resend OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async () => {
-    if (!phoneOtp) {
-      setPhoneError("Please enter OTP");
-      return;
-    }
-    if (!/^\d{6}$/.test(phoneOtp)) {
-      setPhoneError("OTP must be exactly 6 digits");
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await verifyPhoneOtpService({ otp: phoneOtp });
-      setPhoneSuccess(response.message);
-      setIsVerifyingPhone(false);
-      setPhoneOtp("");
-      await fetchUserProfile(); // refresh user
-    } catch (err) {
-      setPhoneError(err.message || "Verification failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-const handleSaveChanges = async () => {
-  setLoading(true);
-  setError("");
-  setSuccess("");
-
-  try {
-    const profileData = new FormData();
-    profileData.append("fullname.firstname", formData.firstName);
-    profileData.append("fullname.lastname", formData.lastName);
-    profileData.append("email", formData.email);
-    profileData.append("phoneNo", formData.mobile);
-
-    const response = await updateB2cProfileService(profileData);
-    setSuccess(response.message || "Profile updated successfully!");
-    setIsEditing(false);
-    await fetchUserProfile(); // Refresh profile data
-  } catch (error) {
-    setError(error.message || "Failed to update profile");
-    console.error("Profile update error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-const handleCancel = () => {
-  setFormData({ ...originalFormData });
-  setIsEditing(false);
-  setError("");
-  setSuccess("");
-  setEmailOtp("");
-  setEmailSuccess("");
-  setEmailError("");
-};
-
-const handleEditToggle = () => {
-  if (isEditing) {
-    handleSaveChanges();
-  } else {
-    setIsEditing(true);
     setError("");
     setSuccess("");
-  }
-};
+
+    try {
+      const profileData = new FormData();
+      profileData.append("fullname.firstname", formData.firstName);
+      profileData.append("fullname.lastname", formData.lastName);
+      profileData.append("email", formData.email);
+
+      const response = await updateB2cProfileService(profileData);
+      setSuccess(response.message || "Profile updated successfully!");
+
+      // if (emailTimerRef.current) {
+      //   clearInterval(emailTimerRef.current);
+      //   emailTimerRef.current = null;
+      // }
+
+      // ✅ Reset email OTP process
+      setIsVerifyingEmail(false);
+      setEmailOtp("");
+      setEmailSuccess("");
+      setEmailError("");
+      setEmailOtpTimer(300);
+      setResendEmailOtpDisabled(true);
+
+      setIsEditing(false);
+      await fetchUserProfile();
+    } catch (error) {
+      setError(error.message || "Failed to update profile");
+      console.error("Profile update error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setFormData({...originalFormData});
+    setIsEditing(false);
+    setError("");
+    setSuccess("");
+
+    // ✅ Reset Email OTP process completely
+    setIsVerifyingEmail(false);
+    setEmailOtp("");w
+    setEmailSuccess("");
+    setEmailError("");
+    setEmailOtpTimer(300);
+    setResendEmailOtpDisabled(true);
+
+      await fetchUserProfile();
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      handleSaveChanges();
+    } else {
+      setIsEditing(true);
+      setError("");
+      setSuccess("");
+    }
+  };
 
   if (profileLoading) {
     return (
@@ -322,8 +283,8 @@ const handleEditToggle = () => {
             {loading
               ? "Saving..."
               : isEditing
-              ? "Save Changes"
-              : "Edit Profile"}
+                ? "Save Changes"
+                : "Edit Profile"}
           </button>
         </div>
       </div>
@@ -443,9 +404,13 @@ const handleEditToggle = () => {
                   ) : formData.email ? (
                     <button
                       type="button"
-                      onClick={handleSendEmailOtp}
-                      disabled={loading || isVerifyingEmail}
-                      className="text-green-600 hover:text-green-700 font-medium text-sm disabled:opacity-50"
+                      onClick={isEditing ? handleSendEmailOtp : undefined}
+                      disabled={!isEditing || loading || isVerifyingEmail}
+                      className={`font-medium text-sm ${
+                        isEditing
+                          ? "text-blue-600 hover:text-blue-700 cursor-pointer"
+                          : "text-gray-400 cursor-not-allowed"
+                      } disabled:opacity-50`}
                     >
                       Verify
                     </button>
@@ -526,14 +491,9 @@ const handleEditToggle = () => {
                       Verified
                     </span>
                   ) : formData.mobile ? (
-                    <button
-                      type="button"
-                      onClick={handleSendPhoneOtp}
-                      disabled={loading || isVerifyingPhone}
-                      className="text-green-600 hover:text-green-700 font-medium text-sm disabled:opacity-50"
-                    >
-                      Verify
-                    </button>
+                    <span className="text-gray-400 text-sm font-medium cursor-not-allowed">
+                      Cannot change
+                    </span>
                   ) : (
                     <span className="inline-flex items-center px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
                       <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
@@ -545,61 +505,11 @@ const handleEditToggle = () => {
                   <input
                     type="tel"
                     value={formData.mobile}
-                    onChange={(e) =>
-                      handleInputChange("mobile", e.target.value)
-                    }
-                    disabled={!isEditing || loading}
-                    required
-                    className={`w-full px-4 py-3 sm:py-4 border rounded-lg text-sm sm:text-base transition-all duration-200 ${
-                      isEditing && !loading
-                        ? "border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        : "border-gray-200 bg-white cursor-not-allowed"
-                    }`}
+                    disabled={true}
+                    title="Phone number cannot be changed"
+                    className="w-full px-4 py-3 sm:py-4 border border-gray-200 rounded-lg text-sm sm:text-base bg-gray-100 cursor-not-allowed opacity-70"
                   />
                 </div>
-                {/* In the Contact Information section, replace the phone OTP rendering block */}
-{isVerifyingPhone && (
-  <div className="space-y-2">
-    <input
-      type="text"
-      placeholder="Enter 6-digit OTP"
-      value={phoneOtp}
-      onChange={(e) => setPhoneOtp(e.target.value)}
-      className="w-full px-4 py-3 border rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-    />
-    <div className="flex justify-between items-center">
-      <span className="text-gray-600">
-        Time remaining: {phoneOtpTimer} seconds
-      </span>
-      <button
-        type="button"
-        onClick={handleResendPhoneOtp}
-        disabled={resendPhoneOtpDisabled || loading}
-        className="text-green-600 hover:text-green-700 font-medium text-sm disabled:opacity-50"
-      >
-        Resend OTP
-      </button>
-    </div>
-    <button
-      type="button"
-      onClick={handleVerifyPhoneOtp}
-      disabled={loading}
-      className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 disabled:opacity-50"
-    >
-      Submit OTP
-    </button>
-  </div>
-)}
-                {phoneSuccess && (
-                  <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
-                    {phoneSuccess}
-                  </div>
-                )}
-                {phoneError && (
-                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                    {phoneError}
-                  </div>
-                )}
               </div>
             </div>
           </div>

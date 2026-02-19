@@ -400,7 +400,7 @@ const ProfilePage = () => {
                         Welcome back,
                       </p>
                       <p className="font-bold text-gray-900 text-xl truncate">
-                        {user?.fullname?.firstname || user?.firstname || "User"}
+                        {user?.fullname?.firstname || "User"} {user?.fullname?.lastname || "User"}
                       </p>
                       <p className="text-sm text-gray-600 truncate">
                         {user?.email || "user@example.com"}
