@@ -9,8 +9,10 @@ import {
   sendEmailOtpService,
   verifyEmailOtpService,
 } from "../../services/b2cAuthServices";
+import { useSearchParams } from "next/navigation";
 
 export const ProfileInformation = () => {
+  const searchParams = useSearchParams(); // Initialize searchParams
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -67,7 +69,11 @@ export const ProfileInformation = () => {
 
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+    const editMode = searchParams.get("editMode");
+    if (editMode === "true") {
+      setIsEditing(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let interval;

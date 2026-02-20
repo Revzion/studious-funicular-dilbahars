@@ -505,12 +505,14 @@ export default function AddressSelection({
       router.push("/login");
       return;
     }
-     if (!user?.email) {
-      setOrderError("Please update your profile with a valid email before checkout.");
+     if (!user?.email || !user.emailVerified) {
+      setOrderError("Please update and verify your profile with a valid email before checkout.");
       onClose();
       onCartClose();
       if (onSidebarClose) onSidebarClose();
-      router.push("/profile");
+      
+      // Pass the editMode flag in the URL query or state
+      router.push("/profile?editMode=true"); 
       return;
     }
     if (!mappedCartItems.length) {
