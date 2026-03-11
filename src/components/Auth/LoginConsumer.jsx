@@ -30,11 +30,15 @@ export default function LoginConsumer() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/");
+      const redirectUrl =
+          new URLSearchParams(window.location.search).get("redirect") || "/";
+        router.push(redirectUrl);
+      // router.replace("/");
     } else {
       setCheckingAuth(false);
     }
   }, [isAuthenticated, router]);
+
 
   useEffect(() => {
     let interval;
@@ -172,9 +176,9 @@ export default function LoginConsumer() {
         setSuccess("Login successful! Welcome back!");
         console.log("Login successful, redirecting...");
 
-        const redirectUrl =
-          new URLSearchParams(window.location.search).get("redirect") || "/";
-        router.push(redirectUrl);
+        // const redirectUrl =
+        //   new URLSearchParams(window.location.search).get("redirect") || "/";
+        // router.push(redirectUrl);
       } else {
         setError("Login failed. Invalid response.");
       }

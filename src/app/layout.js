@@ -37,6 +37,9 @@ const inter = Inter({
 export const metadata = {
   title: "Dilbahar's",
   description: "Dilbahar's",
+  icons: {
+    icon: "/tag.jpeg", 
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -57,13 +60,6 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={`${comicNeue.variable} ${inter.variable} antialiased`}>
-      <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
-      <df-messenger
-          intent="WELCOME"
-          chat-title="Dilbahar&#x27;s"
-          agent-id="8c28cdbc-5a02-49e4-94aa-7c3fa18235b0"
-          language-code="en"
-      ></df-messenger>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe
@@ -74,6 +70,14 @@ export default function RootLayout({ children }) {
           ></iframe>
         </noscript>
         {/* End Google Tag Manager (noscript) */}
+
+        <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+        <df-messenger
+          intent="WELCOME"
+          chat-title="Dilbahar&#x27;s"
+          agent-id="8c28cdbc-5a02-49e4-94aa-7c3fa18235b0"
+          language-code="en"
+        ></df-messenger>
 
         <ReduxProvider>
           <AppInitializer>

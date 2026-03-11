@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   selectIsAuthenticated,
   selectUserStatus,
@@ -13,6 +13,7 @@ export default function ProtectedRoute({ children }) {
   const status = useSelector(selectUserStatus);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams()
 
   const protectedRoutes = [
     "/cart",
@@ -26,11 +27,17 @@ export default function ProtectedRoute({ children }) {
     pathname.startsWith(route)
   );
 
-  useEffect(() => {
+useEffect(() => {
     if (status !== "loading" && isProtected && !isAuthenticated) {
-      router.replace("/login");
+      // 1. Construct the full URL the user was trying to access
+      const currentParams = searchParams.toString();
+      const fullPath = currentParams ? `${pathname}?${currentParams}` : pathname;
+
+      // 2. Redirect to login with the 'redirect' query parameter
+      // We use encodeURIComponent to ensure special characters like '?' or '=' don't break the URL
+      router.replace(`/login?redirect=${encodeURIComponent(fullPath)}`);
     }
-  }, [isAuthenticated, isProtected, router, status]);
+  }, [isAuthenticated, isProtected, router, status, pathname, searchParams]);
 
   // ⏳ Wait until auth check completes
   if (status === "loading")
