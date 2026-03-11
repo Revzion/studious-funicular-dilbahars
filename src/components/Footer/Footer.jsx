@@ -242,6 +242,7 @@ export default function Footer() {
               <li>
                 <a
                   href="mailto:sales@dilbahars.com"
+                  target="_blank"
                   className="flex items-center text-blue-800 border-blue-300 hover:text-blue-900 space-x-2"
                 >
                   <Mail size={18} className="flex-shrink-0" />
@@ -254,24 +255,28 @@ export default function Footer() {
               <li className="flex items-center gap-4">
                 <a
                   href="https://www.instagram.com/dilbahars_/"
+                  target="_blank"
                   className="text-blue-800 border-blue-300 hover:text-blue-900"
                 >
                   <Instagram size={20} />
                 </a>
                 <a
                   href="https://www.facebook.com/dilbahars"
+                  target="_blank"
                   className="text-blue-800 border-blue-300 hover:text-blue-900"
                 >
                   <Facebook size={20} />
                 </a>
                 <a
                   href="https://www.youtube.com/@DilbaharsSince1964"
+                  target="_blank"
                   className="text-blue-800 border-blue-300 hover:text-blue-900"
                 >
                   <Youtube size={20} />
                 </a>
                  <a
                   href="https://www.linkedin.com/company/natural-consumer-care-marketing-pvt-ltd/"
+                  target="_blank"
                   className="text-blue-800 border-blue-300 hover:text-blue-900"
                 >
                   <Linkedin size={20} />
@@ -294,7 +299,7 @@ export default function Footer() {
           </a>
           .
         </div>
-        {/*<BackToTopButton />*/}
+        <BackToTopButton />
       </footer>
     </div>
   );

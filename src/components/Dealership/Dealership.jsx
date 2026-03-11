@@ -2,24 +2,31 @@
 
 import { clearUser } from "@/redux/slice/userSlice";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutB2cUserService } from "@/services/b2cServices";
 
 const Dealership = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
 
   const handleB2BAccess = async (type) => {
     setIsLoading(true);
     try {
-      // Call the B2C logout API
-      await logoutB2cUserService();
+      if(user && user.isAuthenticated){
+        // If user is authenticated, log them out first
+        await logoutB2cUserService();
+        dispatch(clearUser());
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      // // Call the B2C logout API
+      // await logoutB2cUserService();
 
-      // Clear Redux user state
-      dispatch(clearUser());
+      // // Clear Redux user state
+      // dispatch(clearUser());
 
-      // Optional: small delay for smoother UX
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // // Optional: small delay for smoother UX
+      // await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Redirect to the dealer portal
       if (type === "login") {
