@@ -1531,12 +1531,6 @@ export default function AddressSelection({
                       </p>
                     )}
 
-                    {orderError && (
-                      <p className="text-red-500 text-sm text-center font-medium">
-                        {orderError}
-                      </p>
-                    )}
-
                     {/* ... (Keep your existing Selected Address summary code here) ... */}
                     {selectedAddress && (
                       <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
@@ -1608,15 +1602,6 @@ export default function AddressSelection({
                         (paymentMethod === "ONLINE" && !isRazorpayLoaded)
                       }
                     >
-                      {/* Unverified Issue Badge matching your screenshot */}
-                      {!user?.emailVerified && (
-                        <div className="absolute left-1 bg-red-500 rounded-full pl-1 pr-3 py-1 flex items-center space-x-1 border border-red-600">
-                           <div className="bg-red-400/50 rounded-full w-6 h-6 flex items-center justify-center text-[10px] text-white font-bold border border-red-300">N</div>
-                           <span className="text-xs">1 Issue</span>
-                           <X size={12} className="ml-1 opacity-80" />
-                        </div>
-                      )}
-
                       <span>
                         {orderLoading
                           ? "Placing Order..."
