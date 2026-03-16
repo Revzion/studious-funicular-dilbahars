@@ -88,26 +88,38 @@ const RFQCart = ({
                     </p>
 
                     {/* Qty + - Buttons */}
+                   {/* Qty + - Buttons with Manual Input */}
                     <div className="flex justify-between items-center text-sm text-gray-700">
                       <span className="flex items-center gap-2">
                         Qty:
                         <button
                           type="button"
                           onClick={() =>
-                            updateCartItemQty(item._id, item.quantity - 1)
+                            updateCartItemQty(item._id, (item.quantity || 1) - 1)
                           }
                           disabled={item.quantity <= 1}
                           className="px-2 py-1 border rounded disabled:opacity-50"
                         >
                           -
                         </button>
-                        <span className="font-medium w-6 text-center">
-                          {item.quantity}
-                        </span>
+                        
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateCartItemQty(item._id, e.target.value)}
+                          onBlur={(e) => {
+                            if (!e.target.value || Number(e.target.value) < 1) {
+                              updateCartItemQty(item._id, 1);
+                            }
+                          }}
+                          className="w-16 text-center border border-gray-300 rounded py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+
                         <button
                           type="button"
                           onClick={() =>
-                            updateCartItemQty(item._id, item.quantity + 1)
+                            updateCartItemQty(item._id, (item.quantity || 1) + 1)
                           }
                           className="px-2 py-1 border rounded"
                         >

@@ -92,6 +92,7 @@ const WholesaleStore = ({ page = "home" }) => {
       setError(null);
       try {
         const response = await getActiveProductsByCustomerType("b2b");
+        console.log('getActiveProductsByCustomerType', response)
         setProducts(response.products || []);
         setTotalProducts(response.products?.length || 0);
       } catch (err) {
@@ -176,11 +177,19 @@ const WholesaleStore = ({ page = "home" }) => {
   }, [products, searchTerm, filters, sortBy, currentPage, limit]);
 
   // Update quantity for a product
-  const updateQuantity = (productId, change) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: Math.max(1, (prev[productId] || 1) + change),
-    }));
+const updateQuantity = (productId, changeOrValue, isAbsolute = false) => {
+    setQuantities((prev) => {
+      if (isAbsolute) {
+        return {
+          ...prev,
+          [productId]: changeOrValue === "" ? "" : Math.max(1, Number(changeOrValue) || 1),
+        };
+      }
+      return {
+        ...prev,
+        [productId]: Math.max(1, (prev[productId] || 1) + changeOrValue),
+      };
+    });
   };
 
   // Add subproduct to RFQ cart
@@ -329,11 +338,14 @@ const WholesaleStore = ({ page = "home" }) => {
     }
   };
 
-  const updateCartItemQty = (id, newQty) => {
-    setCart(prev =>
-      prev.map(it =>
+const updateCartItemQty = (id, newQty) => {
+    setCart((prev) =>
+      prev.map((it) =>
         it._id === id
-          ? { ...it, quantity: Math.max(1, Number.isFinite(+newQty) ? +newQty : 1) }
+          ? {
+              ...it,
+              quantity: newQty === "" ? "" : Math.max(1, Number.isFinite(+newQty) ? +newQty : 1),
+            }
           : it
       )
     );
@@ -348,8 +360,9 @@ const WholesaleStore = ({ page = "home" }) => {
       />
       {page === "profile" ? (
         <ProfilePage setNotification={setNotification} />
-      ) : page === "rfqs" ? (
-        <RFQPage setNotification={setNotification} />
+      // ) 
+      // : page === "rfqs" ? (
+      //   <RFQPage setNotification={setNotification} />
       ) : page === "quotations" ? (
         <QuotationPage setNotification={setNotification} />
       ) : (

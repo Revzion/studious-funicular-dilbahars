@@ -108,16 +108,29 @@ const ProductCard = ({ product, quantities, updateQuantity, addToRFQ }) => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 ml-3">
-                    <div className="flex items-center border border-gray-300 rounded">
+                  <div className="flex items-center border border-gray-300 rounded">
                       <button
                         onClick={() => updateQuantity(subproduct._id, -1)}
                         className="p-1 hover:bg-gray-100 rounded-l"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
-                      <span className="px-3 py-1 border-x border-gray-300 min-w-[40px] text-center text-sm font-medium">
-                        {quantities[subproduct._id] || 1}
-                      </span>
+                      
+                      {/* Replaced span with input for manual typing */}
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantities[subproduct._id] !== undefined ? quantities[subproduct._id] : 1}
+                        onChange={(e) => updateQuantity(subproduct._id, e.target.value, true)}
+                        onBlur={(e) => {
+                          // Snap back to 1 if user leaves it empty or types 0
+                          if (!e.target.value || Number(e.target.value) < 1) {
+                            updateQuantity(subproduct._id, 1, true);
+                          }
+                        }}
+                        className="w-12 py-1 border-x border-gray-300 text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+
                       <button
                         onClick={() => updateQuantity(subproduct._id, 1)}
                         className="p-1 hover:bg-gray-100 rounded-r"
