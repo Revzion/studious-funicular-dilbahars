@@ -22,6 +22,8 @@ import { fetchCartItems, clearUserCart } from "@/redux/thunks/cartThunks";
 import { getProfileService } from "@/services/b2cServices";
 import { fetchCompanyProfile } from "@/redux/slice/companySlice";
 import { addB2cAddressService } from "@/services/b2cServices";
+// Add this to your existing imports
+import { sendEmailOtpService, verifyEmailOtpService } from "@/services/b2cAuthServices";
 
 export default function AddressSelection({
   isOpen,
@@ -39,6 +41,14 @@ export default function AddressSelection({
   const [showNewBillingAddressForm, setShowNewBillingAddressForm] =
     useState(false);
   const [paymentMethod, setPaymentMethod] = useState("ONLINE");
+  // --- New Email Verification States ---
+  const [emailInput, setEmailInput] = useState("");
+  const [otpInput, setOtpInput] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [timer, setTimer] = useState(120);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailMsg, setEmailMsg] = useState({ type: "", text: "" });
+  // -------------------------------------
   const [newAddress, setNewAddress] = useState({
     fullname: "",
     street: "",
@@ -177,6 +187,30 @@ export default function AddressSelection({
     };
   }, [isOpen]);
 
+  // Populate email input when user data loads
+  useEffect(() => {
+    if (user?.email && !emailInput) {
+      setEmailInput(user.email);
+    }
+  }, [user]);
+
+  // Handle OTP countdown timer
+  useEffect(() => {
+    let interval;
+    if (otpSent && timer > 0) {
+      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    } else if (timer === 0) {
+      setOtpSent(false); // Allow resend when timer ends
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, timer]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchCartItems());
@@ -296,33 +330,6 @@ export default function AddressSelection({
         handlePincodeCheck(newValue, "billing");
       }
     }
-  };
-
-  const handleCancelNewAddress = () => {
-    setShowNewAddressForm(false);
-    setShowNewBillingAddressForm(false);
-    setNewAddress({
-      fullname: "",
-      street: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "",
-      addresstype: "home",
-      otherAddressType: "",
-    });
-    setNewBillingAddress({
-      fullname: "",
-      street: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "",
-      addresstype: "home",
-      otherAddressType: "",
-      companyName: "",
-      gstNumber: "",
-    });
   };
 
   // Replace handleAddNewAddress with this
@@ -491,6 +498,46 @@ export default function AddressSelection({
     }
   };
 
+  const handleSendEmailOtp = async () => {
+    if (!emailInput) {
+      setEmailMsg({ type: "error", text: "Please enter an email address." });
+      return;
+    }
+    setEmailLoading(true);
+    setEmailMsg({ type: "", text: "" });
+    try {
+      await sendEmailOtpService({ email: emailInput });
+      setOtpSent(true);
+      setTimer(120);
+      setEmailMsg({ type: "success", text: "OTP sent to email" });
+    } catch (error) {
+      setEmailMsg({ type: "error", text: error.message || "Failed to send OTP" });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    if (!otpInput || otpInput.length !== 6) {
+      setEmailMsg({ type: "error", text: "Please enter a valid 6-digit OTP." });
+      return;
+    }
+    setEmailLoading(true);
+    setEmailMsg({ type: "", text: "" });
+    try {
+      await verifyEmailOtpService({ otp: otpInput });
+      setEmailMsg({ type: "success", text: "Email verified successfully" });
+      
+      // Update local user state to unlock the "Place Order" button
+      setUser((prev) => ({ ...prev, emailVerified: true, email: emailInput }));
+      setOtpSent(false);
+    } catch (error) {
+      setEmailMsg({ type: "error", text: error.message || "Invalid OTP" });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       setOrderError("Please select or add a shipping address");
@@ -506,13 +553,8 @@ export default function AddressSelection({
       return;
     }
      if (!user?.email || !user.emailVerified) {
-      setOrderError("Please update and verify your profile with a valid email before checkout.");
-      onClose();
-      onCartClose();
-      if (onSidebarClose) onSidebarClose();
-      
-      // Pass the editMode flag in the URL query or state
-      router.push("/profile?editMode=true"); 
+      setOrderError("Please verify your email before placing an order.");
+      // Removed the router.push("/profile?editMode=true"); logic
       return;
     }
     if (!mappedCartItems.length) {
@@ -878,6 +920,86 @@ export default function AddressSelection({
                 </motion.div>
               ) : (
                 <div className="space-y-4">
+                  {/* --- EMAIL VERIFICATION CARD --- */}
+                  {isAuthenticated && user && (
+                    <div className="bg-[#f8f9ff] rounded-xl p-4 shadow-sm border border-indigo-50 mb-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-lg font-bold text-indigo-900">Email Verification</h3>
+                        {user.emailVerified ? (
+                          <span className="text-green-500 text-xs font-semibold flex items-center bg-green-50 px-2 py-1 rounded">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="text-red-400 text-xs font-semibold bg-red-50 px-2 py-1 rounded">
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+
+                      {user.emailVerified ? (
+                        <div className="flex items-center space-x-2 text-gray-700 bg-[#f4f5fa] p-3 rounded-md border border-gray-100">
+                          <Check size={16} className="text-green-500" />
+                          <span className="text-sm">{user.email}</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <input
+                            type="email"
+                            value={emailInput}
+                            onChange={(e) => setEmailInput(e.target.value)}
+                            placeholder="Enter your email"
+                            disabled={otpSent}
+                            className="w-full border border-gray-200 bg-[#f4f5fa] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-300 disabled:opacity-70"
+                          />
+                          
+                          {otpSent ? (
+                            <>
+                              <input
+                                type="text"
+                                value={otpInput}
+                                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="Enter 6-digit OTP"
+                                className="w-full border border-gray-200 bg-[#f4f5fa] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                              />
+                              <div className="flex justify-between items-center text-xs text-gray-500 px-1">
+                                <span>Expires in: {formatTime(timer)}</span>
+                                <button 
+                                  onClick={handleSendEmailOtp} 
+                                  disabled={timer > 0 || emailLoading}
+                                  className="text-indigo-500 font-medium hover:underline disabled:opacity-50"
+                                >
+                                  Resend
+                                </button>
+                              </div>
+                              <button
+                                onClick={handleVerifyEmailOtp}
+                                disabled={emailLoading || otpInput.length !== 6}
+                                className="w-full bg-[#7ec49e] text-white font-bold py-2 rounded-md hover:bg-green-500 transition-colors disabled:opacity-60"
+                              >
+                                {emailLoading ? "Verifying..." : "Submit OTP"}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={handleSendEmailOtp}
+                              disabled={emailLoading || !emailInput}
+                              className="w-full bg-[#7ec49e] text-white font-bold py-2 rounded-md hover:bg-green-500 transition-colors disabled:opacity-60"
+                            >
+                              {emailLoading ? "Sending..." : "Send OTP"}
+                            </button>
+                          )}
+
+                          {emailMsg.text && (
+                            <p className={`text-xs mt-2 ${emailMsg.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                              {emailMsg.text}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* --- END EMAIL VERIFICATION CARD --- */}
+
                   {!showNewAddressForm && !showNewBillingAddressForm ? (
                     <>
                       {/* Shipping Address Section */}
@@ -1401,60 +1523,46 @@ export default function AddressSelection({
                   transition={{ delay: 0.4 }}
                 >
                   <div className="space-y-3">
+                    
+                    {/* Inline Email Verification Error */}
+                    {!user?.emailVerified && (
+                      <p className="text-red-500 text-sm text-center italic mb-2">
+                        Please verify your email before placing an order.
+                      </p>
+                    )}
+
                     {orderError && (
-                      <p className="text-red-500 text-sm text-center">
+                      <p className="text-red-500 text-sm text-center font-medium">
                         {orderError}
                       </p>
                     )}
+
+                    {/* ... (Keep your existing Selected Address summary code here) ... */}
                     {selectedAddress && (
                       <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-                        <p className="font-bold text-green-800 mb-2">
-                          Selected Shipping Address
-                        </p>
+                        <p className="font-bold text-green-800 mb-2">Selected Shipping Address</p>
                         <p className="text-sm text-green-600 mb-3">
-                          {selectedAddress.fullname}, {selectedAddress.street},{" "}
-                          {selectedAddress.city}, {selectedAddress.state}{" "}
-                          {selectedAddress.pincode}, {selectedAddress.country}
+                           {selectedAddress.fullname}, {selectedAddress.street}, {selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}, {selectedAddress.country}
                         </p>
-
                         {selectedBillingAddress && (
                           <>
-                            <p className="font-bold text-blue-800 mb-2">
-                              Selected Billing Address
-                            </p>
+                            <p className="font-bold text-blue-800 mb-2">Selected Billing Address</p>
                             <p className="text-sm text-blue-600">
                               {useSameForBilling ? (
-                                <span className="italic">
-                                  Same as shipping address
-                                </span>
+                                <span className="italic">Same as shipping address</span>
                               ) : (
-                                `${selectedBillingAddress.fullname}, ${
-                                  selectedBillingAddress.street
-                                }, ${selectedBillingAddress.city}, ${
-                                  selectedBillingAddress.state
-                                } ${selectedBillingAddress.pincode}, ${
-                                  selectedBillingAddress.country
-                                }${
-                                  selectedBillingAddress.companyName
-                                    ? `, ${selectedBillingAddress.companyName}`
-                                    : ""
-                                }${
-                                  selectedBillingAddress.gstNumber
-                                    ? `, GST: ${selectedBillingAddress.gstNumber}`
-                                    : ""
-                                }`
+                                `${selectedBillingAddress.fullname}, ${selectedBillingAddress.street}, ${selectedBillingAddress.city}, ${selectedBillingAddress.state} ${selectedBillingAddress.pincode}, ${selectedBillingAddress.country}`
                               )}
                             </p>
                           </>
                         )}
                       </div>
                     )}
-                    {/* Payment Method Selection */}
+
+                    {/* ... (Keep your existing Payment Method code here) ... */}
                     {selectedAddress && selectedBillingAddress && (
                       <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-                        <p className="font-bold text-green-800 mb-2">
-                          Payment Method
-                        </p>
+                        <p className="font-bold text-green-800 mb-2">Payment Method</p>
                         <div className="flex space-x-4">
                           <label className="flex items-center space-x-2 cursor-pointer">
                             <input
@@ -1477,20 +1585,20 @@ export default function AddressSelection({
                               onChange={() => setPaymentMethod("COD")}
                               className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 focus:ring-green-500"
                             />
-                            <span className="text-green-800">
-                              Cash on Delivery
-                            </span>
+                            <span className="text-green-800">Cash on Delivery</span>
                             <IndianRupee size={18} className="text-green-600" />
                           </label>
                         </div>
                       </div>
                     )}
+
                     <motion.button
-                      className="w-full bg-gradient-to-r from-blue-500 to-green-600 text-white font-bold py-3 px-6 rounded-full shadow-md flex items-center justify-center space-x-2"
-                      whileHover={{
-                        scale: 1.03,
-                        boxShadow: "0 10px 25px -5px rgba(147, 51, 234, 0.5)",
-                      }}
+                      className={`w-full font-bold py-3 px-6 rounded-full shadow-md flex items-center justify-center space-x-2 relative overflow-hidden ${
+                        !user?.emailVerified 
+                          ? "bg-green-600 text-white" 
+                          : "bg-gradient-to-r from-blue-500 to-green-600 text-white"
+                      }`}
+                      whileHover={user?.emailVerified ? { scale: 1.03, boxShadow: "0 10px 25px -5px rgba(147, 51, 234, 0.5)" } : {}}
                       whileTap={{ scale: 0.98 }}
                       onClick={handlePlaceOrder}
                       disabled={
@@ -1500,16 +1608,20 @@ export default function AddressSelection({
                         (paymentMethod === "ONLINE" && !isRazorpayLoaded)
                       }
                     >
+                      {/* Unverified Issue Badge matching your screenshot */}
+                      {!user?.emailVerified && (
+                        <div className="absolute left-1 bg-red-500 rounded-full pl-1 pr-3 py-1 flex items-center space-x-1 border border-red-600">
+                           <div className="bg-red-400/50 rounded-full w-6 h-6 flex items-center justify-center text-[10px] text-white font-bold border border-red-300">N</div>
+                           <span className="text-xs">1 Issue</span>
+                           <X size={12} className="ml-1 opacity-80" />
+                        </div>
+                      )}
+
                       <span>
                         {orderLoading
                           ? "Placing Order..."
                           : `Place Order (₹${total.toFixed(2)})`}
                       </span>
-                      {/* {paymentMethod === "ONLINE" ? (
-                        <CreditCard size={20} />
-                      ) : (
-                        <IndianRupee size={18} />
-                      )} */}
                     </motion.button>
                   </div>
                 </motion.div>
