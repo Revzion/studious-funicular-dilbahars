@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://jgq28ngcpf.us-east-1.awsapprunner.com/api/v1/",
+    baseURL: "https://api.dilbahars.com/api/v1/",
     withCredentials: true,
 });
 
