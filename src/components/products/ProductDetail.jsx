@@ -159,6 +159,8 @@ export default function ProductDetail() {
           getCategoriesService(),
         ]);
 
+        console.log("Product response:", productResponse);
+
         const productData = productResponse.data || productResponse;
 
         const product = productResponse.product || {};

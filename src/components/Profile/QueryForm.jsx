@@ -295,16 +295,16 @@ export default function QueryForm({ onQuerySubmitted }) {
                           onClick={() => handleOrderSelect(order._id)}
                         >
                           <img
-                            src={item.productId.image[0].url}
-                            alt={item.productId.sku}
+                            src={item.productId?.image[0]?.url}
+                            alt={item.productId?.sku}
                             className="w-12 h-12 object-cover mr-2"
                           />
                           <div className="flex-1 text-sm">
                             <p className="font-medium truncate">
                               Item:{" "}
-                              {item.productId.sku.length > 20
-                                ? `${item.productId.sku.slice(0, 20)}...`
-                                : item.productId.sku}
+                              {item?.productId?.sku?.length > 20
+                                ? `${item?.productId?.sku?.slice(0, 20)}...`
+                                : item?.productId?.sku}
                             </p>
                             <p className="text-gray-500 text-xs truncate">
                               Order ID: {order._id.slice(-6)}

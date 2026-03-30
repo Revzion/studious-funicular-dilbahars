@@ -92,7 +92,7 @@ const WholesaleStore = ({ page = "home" }) => {
       setError(null);
       try {
         const response = await getActiveProductsByCustomerType("b2b");
-        console.log('getActiveProductsByCustomerType', response)
+      
         setProducts(response.products || []);
         setTotalProducts(response.products?.length || 0);
       } catch (err) {
@@ -352,7 +352,7 @@ const updateCartItemQty = (id, newQty) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-teal-50">
+    <div className="min-h-[80vh] bg-gradient-to-br from-cyan-50 to-teal-50">
       <Notification
         message={notification.message}
         type={notification.type}
@@ -459,6 +459,7 @@ const updateCartItemQty = (id, newQty) => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

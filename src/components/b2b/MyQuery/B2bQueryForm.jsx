@@ -1,6 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { addB2bQueryService } from "../../../services/queryServices";
+import { getB2BUserRFQsService } from "../../../services/rfqServices";
+import { getActiveProductsByCustomerType } from "@/services/productServices";
 
 const B2bQueryForm = () => {
   const [formData, setFormData] = useState({
@@ -18,9 +20,65 @@ const B2bQueryForm = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [rfqs, setRfqs] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [rfqsLoading, setRfqsLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  // Two-level product selection
+  const [selectedMainProduct, setSelectedMainProduct] = useState("");
+
+  // Fetch RFQs when query type is Order or Other
+  useEffect(() => {
+    if (formData.query_type === "Order" || formData.query_type === "Other") {
+      const fetchRFQs = async () => {
+        setRfqsLoading(true);
+        try {
+          const response = await getB2BUserRFQsService();
+          setRfqs(response.rfqs || []);
+        } catch (err) {
+          setError("Failed to fetch RFQs.");
+        } finally {
+          setRfqsLoading(false);
+        }
+      };
+      fetchRFQs();
+    }
+  }, [formData.query_type]);
+
+  // Fetch Products when query type is Product or Other
+  useEffect(() => {
+    if (formData.query_type === "Product" || formData.query_type === "Other") {
+      const fetchProducts = async () => {
+        setProductsLoading(true);
+        try {
+          const response = await getActiveProductsByCustomerType("b2b");
+          setProducts(response.products || []);
+        } catch (err) {
+          setError("Failed to fetch products.");
+        } finally {
+          setProductsLoading(false);
+        }
+      };
+      fetchProducts();
+    }
+  }, [formData.query_type]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    // Reset subproduct + main product selection when query type changes
+    if (name === "query_type") {
+      setSelectedMainProduct("");
+      setFormData((prev) => ({ ...prev, productId: "", rfqId: "", [name]: value }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // When user picks a main product, reset subproduct selection
+  const handleMainProductChange = (e) => {
+    setSelectedMainProduct(e.target.value);
+    setFormData((prev) => ({ ...prev, productId: "" }));
   };
 
   const handleImageChange = (e) => {
@@ -43,24 +101,24 @@ const B2bQueryForm = () => {
     setLoading(true);
 
     const data = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (
-        (key === "rfqId" &&
-          !formData.rfqId &&
-          formData.query_type !== "Order" &&
-          formData.query_type !== "Other") ||
-        (key === "productId" &&
-          !formData.productId &&
-          formData.query_type !== "Product" &&
-          formData.query_type !== "Other") ||
-        (key === "other_query_type" &&
-          !formData.other_query_type &&
-          formData.query_type !== "Other")
-      ) {
-        return;
-      }
-      data.append(key, formData[key]);
-    });
+
+    // Always append base fields
+    data.append("name", formData.name);
+    data.append("email", formData.email);
+    data.append("phone_no", formData.phone_no);
+    data.append("message", formData.message);
+    data.append("query_type", formData.query_type);
+
+    // Conditionally append based on query type
+    if (formData.query_type === "Order") {
+      data.append("rfqId", formData.rfqId);
+    } else if (formData.query_type === "Product") {
+      data.append("productId", formData.productId);
+    } else if (formData.query_type === "Other") {
+      if (formData.rfqId) data.append("rfqId", formData.rfqId);
+      if (formData.productId) data.append("productId", formData.productId);
+      data.append("other_query_type", formData.other_query_type);
+    }
 
     images.forEach((image) => {
       data.append("images", image);
@@ -68,7 +126,6 @@ const B2bQueryForm = () => {
 
     try {
       const response = await addB2bQueryService(data);
-      // console.log("added query", response);
       setSuccess(response.message);
       setFormData({
         name: "",
@@ -80,6 +137,7 @@ const B2bQueryForm = () => {
         productId: "",
         other_query_type: "",
       });
+      setSelectedMainProduct("");
       setImages([]);
     } catch (err) {
       setError(err.message || "An error occurred while submitting the query.");
@@ -88,155 +146,246 @@ const B2bQueryForm = () => {
     }
   };
 
+  const inputClass =
+    "mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
+  const labelClass = "block text-sm font-medium text-gray-700";
+
+  // Helper: get subproducts of currently selected main product
+  const getSubproducts = () => {
+    const main = products.find((p) => p._id === selectedMainProduct);
+    return main?.subproduct || [];
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center">Submit B2B Query</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {success && <p className="text-green-500 mb-4">{success}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Name
-          </label>
+          <label className={labelClass}>Name</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
             required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className={inputClass}
           />
         </div>
+
+        {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
+          <label className={labelClass}>Email</label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleInputChange}
             required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className={inputClass}
           />
         </div>
+
+        {/* Phone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Phone Number
-          </label>
+          <label className={labelClass}>Phone Number</label>
           <input
             type="tel"
             name="phone_no"
             value={formData.phone_no}
             onChange={handleInputChange}
             required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className={inputClass}
           />
         </div>
+
+        {/* Query Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Query Type
-          </label>
+          <label className={labelClass}>Query Type</label>
           <select
             name="query_type"
             value={formData.query_type}
             onChange={handleInputChange}
             required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className={inputClass}
           >
             <option value="Order">Order</option>
             <option value="Product">Product</option>
             <option value="Other">Other</option>
           </select>
         </div>
+
+        {/* ── ORDER: RFQ dropdown (required) ── */}
         {formData.query_type === "Order" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              RFQ ID
-            </label>
-            <input
-              type="text"
-              name="rfqId"
-              value={formData.rfqId}
-              onChange={handleInputChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        )}
-        {formData.query_type === "Product" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Product ID
-            </label>
-            <input
-              type="text"
-              name="productId"
-              value={formData.productId}
-              onChange={handleInputChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        )}
-        {formData.query_type === "Other" && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                RFQ ID (Optional)
-              </label>
-              <input
-                type="text"
+            <label className={labelClass}>RFQ</label>
+            {rfqsLoading ? (
+              <p className="text-sm text-gray-500 mt-1">Loading RFQs...</p>
+            ) : (
+              <select
                 name="rfqId"
                 value={formData.rfqId}
                 onChange={handleInputChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+                required
+                className={inputClass}
+              >
+                <option value="">-- Select an RFQ --</option>
+                {rfqs.map((rfq) => (
+                  <option key={rfq._id} value={rfq._id}>
+                    {rfq.req_id || rfq._id} — {rfq.status}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+
+        {/* ── PRODUCT: Main product → Subproduct (both required) ── */}
+        {formData.query_type === "Product" && (
+          <>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Product ID (Optional)
-              </label>
-              <input
-                type="text"
-                name="productId"
-                value={formData.productId}
-                onChange={handleInputChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              <label className={labelClass}>Product</label>
+              {productsLoading ? (
+                <p className="text-sm text-gray-500 mt-1">Loading products...</p>
+              ) : (
+                <select
+                  value={selectedMainProduct}
+                  onChange={handleMainProductChange}
+                  required
+                  className={inputClass}
+                >
+                  <option value="">-- Select a Product --</option>
+                  {products.map((product) => (
+                    <option key={product._id} value={product._id}>
+                      {product.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
+
+            {selectedMainProduct && (
+              <div>
+                <label className={labelClass}>Variant / Sub-product</label>
+                <select
+                  name="productId"
+                  value={formData.productId}
+                  onChange={handleInputChange}
+                  required
+                  className={inputClass}
+                >
+                  <option value="">-- Select a Variant --</option>
+                  {getSubproducts().map((sub) => (
+                    <option key={sub._id} value={sub._id}>
+                      {sub.subtitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── OTHER: RFQ (optional) + Main product → Subproduct (optional) + Description (required) ── */}
+        {formData.query_type === "Other" && (
+          <>
+            {/* RFQ optional */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Other Query Description
-              </label>
+              <label className={labelClass}>RFQ (Optional)</label>
+              {rfqsLoading ? (
+                <p className="text-sm text-gray-500 mt-1">Loading RFQs...</p>
+              ) : (
+                <select
+                  name="rfqId"
+                  value={formData.rfqId}
+                  onChange={handleInputChange}
+                  className={inputClass}
+                >
+                  <option value="">-- Select an RFQ (optional) --</option>
+                  {rfqs.map((rfq) => (
+                    <option key={rfq._id} value={rfq._id}>
+                      {rfq.req_id || rfq._id} — {rfq.status}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Main product optional */}
+            <div>
+              <label className={labelClass}>Product (Optional)</label>
+              {productsLoading ? (
+                <p className="text-sm text-gray-500 mt-1">Loading products...</p>
+              ) : (
+                <select
+                  value={selectedMainProduct}
+                  onChange={handleMainProductChange}
+                  className={inputClass}
+                >
+                  <option value="">-- Select a Product (optional) --</option>
+                  {products.map((product) => (
+                    <option key={product._id} value={product._id}>
+                      {product.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Subproduct optional — only shown once a main product is picked */}
+            {selectedMainProduct && (
+              <div>
+                <label className={labelClass}>Variant / Sub-product (Optional)</label>
+                <select
+                  name="productId"
+                  value={formData.productId}
+                  onChange={handleInputChange}
+                  className={inputClass}
+                >
+                  <option value="">-- Select a Variant (optional) --</option>
+                  {getSubproducts().map((sub) => (
+                    <option key={sub._id} value={sub._id}>
+                      {sub.subtitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Other description required */}
+            <div>
+              <label className={labelClass}>Other Query Description</label>
               <input
                 type="text"
                 name="other_query_type"
                 value={formData.other_query_type}
                 onChange={handleInputChange}
                 required
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className={inputClass}
               />
             </div>
           </>
         )}
+
+        {/* Message */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Message
-          </label>
+          <label className={labelClass}>Message</label>
           <textarea
             name="message"
             value={formData.message}
             onChange={handleInputChange}
             required
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className={inputClass}
             rows="4"
           />
         </div>
+
+        {/* Images */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Upload Images (Max 5)
-          </label>
+          <label className={labelClass}>Upload Images (Max 5)</label>
           <input
             type="file"
             multiple
@@ -263,6 +412,8 @@ const B2bQueryForm = () => {
             ))}
           </div>
         </div>
+
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
