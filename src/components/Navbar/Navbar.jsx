@@ -161,6 +161,7 @@ export default function Navbar() {
       try {
         setLoading(true);
         const response = await getCategoriesService();
+        console.log("response", response);
         const allCategories = response.data?.categories || [];
         const activeCategories = allCategories.filter((cat) => cat.isActive);
         setCategories(activeCategories);
@@ -400,7 +401,7 @@ export default function Navbar() {
                 <Link href="/" passHref>
                   <div className="logo-container text-2xl font-bold flex items-center justify-center cursor-pointer">
                     <img
-                      src="/Dilbahars-logo.png"
+                      src="https://dilbahars.com/wp-content/uploads/2024/09/Dilbahars-e1726221534608.png"
                       width={100}
                       alt="Dilbahar's"
                     />
@@ -795,7 +796,7 @@ export default function Navbar() {
                               whileHover={{ backgroundColor: "#EFF6FF" }}
                             >
                               <a
-                                href={`/products?category=${category.title}`}
+                                href={`/products?category=${encodeURIComponent(category.title)}`}
                                 className="w-full flex items-center justify-between px-4 py-3 text-blue-700 transition-colors font-medium"
                               >
                                 <div className="flex items-center">
@@ -1046,7 +1047,7 @@ export default function Navbar() {
                                     className="border-b border-gray-100 last:border-0"
                                   >
                                     <a
-                                      href={`/products?category=${category.title}`}
+                                      href={`/products?category=${encodeURIComponent(category.title)}`}
                                       className="flex items-center space-x-3 px-4 py-3 text-blue-800 font-medium"
                                       onClick={() => setActiveDropdown(null)}
                                     >
