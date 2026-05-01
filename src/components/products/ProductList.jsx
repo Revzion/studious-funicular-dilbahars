@@ -524,6 +524,8 @@ export default function ProductList({onProductSelect}) {
   useEffect(() => {
     if (isInitialLoad) return;
 
+    setPaginationLoading(true);
+
     const timeoutId = setTimeout(() => {
       // setLoading(true);
       debouncedFetchProducts(filters, (err, result) => {
@@ -891,13 +893,13 @@ export default function ProductList({onProductSelect}) {
                     }}
                   >
                     <Loader2 size={48} className="text-teal-500" />
-                    <Candy
+                    {/* <Candy
                       size={24}
                       className="absolute top-0 left-0 text-blue-500 animate-pulse"
-                    />
+                    /> */}
                   </motion.div>
                   <p className="text-blue-800 font-medium mt-4">
-                    Fetching new page...
+                    Fetching products... 
                   </p>
                 </motion.div>
               ) : filteredProducts.length > 0 ? (
