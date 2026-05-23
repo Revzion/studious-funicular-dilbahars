@@ -132,7 +132,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
 
   const subtotal = mappedCartItems.reduce(
     (total, item) => total + (item.price * item.quantity || 0),
-    0
+    0,
   );
   const shipping =
     companyProfile?.shipping && subtotal >= companyProfile.shipping.minAmount
@@ -199,7 +199,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
 
     if (!validatePincode(pincode)) {
       setAddressError(
-        "Invalid pincode. Please enter a valid 6-digit Indian pincode"
+        "Invalid pincode. Please enter a valid 6-digit Indian pincode",
       );
       setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
       return;
@@ -207,39 +207,39 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
 
     try {
       setIsPincodeLoading(true);
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
-      const data = await response.json();
 
-      if (data[0]?.Status !== "Success") {
+      const response = await fetch(`/api/pincode/check?pincode=${pincode}`);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
         setAddressError(
-          "Invalid pincode. Please enter a correct Indian pincode"
+          result.message ||
+            "Invalid pincode. Please enter a correct Indian pincode",
         );
         setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
         return;
       }
 
-      const postOffice = data[0]?.PostOffice[0];
-      if (postOffice) {
-        if (type === "shipping") {
-          setNewAddress((prev) => ({
-            ...prev,
-            state: postOffice.State,
-            city: postOffice.District,
-            country: "India",
-          }));
-        } else {
-          setNewBillingAddress((prev) => ({
-            ...prev,
-            state: postOffice.State,
-            city: postOffice.District,
-            country: "India",
-          }));
-        }
-        setIsPincodeVerified((prev) => ({ ...prev, [type]: true }));
-        setAddressError("");
+      const location = result.data;
+
+      if (type === "shipping") {
+        setNewAddress((prev) => ({
+          ...prev,
+          state: location.state,
+          city: location.city,
+          country: location.country || "India",
+        }));
+      } else {
+        setNewBillingAddress((prev) => ({
+          ...prev,
+          state: location.state,
+          city: location.city,
+          country: location.country || "India",
+        }));
       }
+
+      setIsPincodeVerified((prev) => ({ ...prev, [type]: true }));
+      setAddressError("");
     } catch (error) {
       setAddressError("Failed to verify pincode. Please try again.");
       setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
@@ -302,7 +302,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
       setAddressError(
         !isPincodeVerified.shipping
           ? "Please verify the pincode before saving"
-          : "Please fill in all required address fields"
+          : "Please fill in all required address fields",
       );
       return;
     }
@@ -350,7 +350,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
       setAddressError(
         !isPincodeVerified.billing
           ? "Please verify the pincode before saving"
-          : "Please fill in all required billing address fields"
+          : "Please fill in all required billing address fields",
       );
       return;
     }
@@ -473,13 +473,13 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
         } catch (error) {
           console.error("Failed to clear cart:", error);
           setOrderError(
-            "Order placed, but failed to clear cart. Please clear manually."
+            "Order placed, but failed to clear cart. Please clear manually.",
           );
         }
 
         onClose(); // Ensure modal closes
         const targetPath = `/orderconfirmation?orderData=${encodeURIComponent(
-          JSON.stringify(confirmationData)
+          JSON.stringify(confirmationData),
         )}`;
         // console.log("Navigating to:", targetPath);
         router.push(targetPath);
@@ -496,7 +496,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
             product_id: item.productId,
             quantity: item.quantity,
           })),
-          appliedCoupon ? { code: appliedCoupon.code } : {}
+          appliedCoupon ? { code: appliedCoupon.code } : {},
         );
         // console.log("razorpayData", razorpayData);
 
@@ -528,13 +528,13 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
               } catch (error) {
                 console.error("Failed to clear cart:", error);
                 setOrderError(
-                  "Order placed, but failed to clear cart. Please clear manually."
+                  "Order placed, but failed to clear cart. Please clear manually.",
                 );
               }
 
               onClose();
               const targetPath = `/orderconfirmation?orderData=${encodeURIComponent(
-                JSON.stringify(confirmationData)
+                JSON.stringify(confirmationData),
               )}`;
               // console.log("Navigating to:", targetPath);
               router.push(targetPath);
@@ -566,7 +566,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
         rzp.on("payment.failed", function (response) {
           console.error("Payment failed:", response.error);
           setOrderError(
-            response.error.description || "Payment failed. Please try again."
+            response.error.description || "Payment failed. Please try again.",
           );
           setOrderLoading(false);
         });
@@ -575,7 +575,7 @@ export default function AddressSelection2({ isOpen, onClose, appliedCoupon }) {
     } catch (error) {
       console.error("Order initiation error:", error.response?.data?.message);
       setOrderError(
-        error.response?.data?.message || "Failed to initiate order"
+        error.response?.data?.message || "Failed to initiate order",
       );
       setOrderLoading(false);
     }

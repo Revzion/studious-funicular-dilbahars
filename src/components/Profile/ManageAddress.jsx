@@ -109,98 +109,61 @@ const ManageAddresses = () => {
     return pincodeRegex.test(pincode);
   };
 
-  const handlePincodeCheck = async (pincode) => {
-    if (!pincode) {
-      setError("Pincode is required");
-      setIsPincodeVerified(false);
-      return;
-    }
+   const handlePincodeCheck = async (pincode) => {
+  if (!pincode) {
+    setError("Pincode is required");
+    setIsPincodeVerified(false);
+    return;
+  }
 
-    if (!validatePincode(pincode)) {
-      setError("Invalid pincode. Please enter a valid 6-digit Indian pincode");
-      setIsPincodeVerified(false);
-      return;
-    }
+  if (!validatePincode(pincode)) {
+    setError("Invalid pincode. Please enter a valid 6-digit Indian pincode");
+    setIsPincodeVerified(false);
+    return;
+  }
 
+  try {
+    setIsPincodeLoading(true);
+
+    const response = await fetch(`/api/pincode/check?pincode=${pincode}`);
+
+    const text = await response.text();
+
+    let result;
     try {
-      setIsPincodeLoading(true);
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
-      const data = await response.json();
-
-      if (data[0]?.Status !== "Success") {
-        setError("Invalid pincode. Please enter a correct Indian pincode");
-        setIsPincodeVerified(false);
-        return;
-      }
-
-      const postOffice = data[0]?.PostOffice[0];
-      if (postOffice) {
-        setFormData((prev) => ({
-          ...prev,
-          state: postOffice.State,
-          city: postOffice.District,
-          country: "India",
-        }));
-        setIsPincodeVerified(true);
-        setError("");
-      }
-    } catch (error) {
-      setError("Failed to verify pincode. Please try again.");
-      setIsPincodeVerified(false);
-      console.error("Pincode API error:", error);
-    } finally {
-      setIsPincodeLoading(false);
-    }
-  };
-
-  const handlePincodeBlur = async (e) => {
-    const pincode = e.target.value;
-    if (!pincode) {
-      setError("Pincode is required");
+      result = JSON.parse(text);
+    } catch {
+      console.error("API returned non-JSON response:", text);
+      setError("Pincode API route is not returning valid JSON");
       setIsPincodeVerified(false);
       return;
     }
 
-    if (!validatePincode(pincode)) {
-      setError("Invalid pincode. Please enter a valid 6-digit Indian pincode");
+    if (!response.ok || !result.success) {
+      setError(result.message || "Invalid pincode");
       setIsPincodeVerified(false);
       return;
     }
 
-    try {
-      setIsPincodeLoading(true);
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
-      const data = await response.json();
+    setFormData((prev) => ({
+      ...prev,
+      state: result.data.state,
+      city: result.data.city,
+      country: result.data.country || "India",
+    }));
 
-      if (data[0]?.Status !== "Success") {
-        setError("Invalid pincode. Please enter a correct Indian pincode");
-        setIsPincodeVerified(false);
-        return;
-      }
+    setIsPincodeVerified(true);
+    setError("");
+  } catch (error) {
+    console.error("Pincode API error full:", error);
+    setError("Failed to verify pincode. Please try again.");
+    setIsPincodeVerified(false);
+  } finally {
+    setIsPincodeLoading(false);
+  }
+};
 
-      const postOffice = data[0]?.PostOffice[0];
-      if (postOffice) {
-        setFormData((prev) => ({
-          ...prev,
-          state: postOffice.State,
-          city: postOffice.District,
-          country: "India",
-        }));
-        setIsPincodeVerified(true);
-        setError("");
-      }
-    } catch (error) {
-      setError("Failed to verify pincode. Please try again.");
-      setIsPincodeVerified(false);
-      console.error("Pincode API error:", error);
-    } finally {
-      setIsPincodeLoading(false);
-    }
-  };
+  
 
   const handleSubmit = async () => {
     if (

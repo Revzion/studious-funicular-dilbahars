@@ -236,63 +236,62 @@ export default function AddressSelection({
   };
 
   const handlePincodeCheck = async (pincode, type) => {
-    if (!pincode) {
-      setAddressError("Pincode is required");
-      setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
-      return;
-    }
+  if (!pincode) {
+    setAddressError("Pincode is required");
+    setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
+    return;
+  }
 
-    if (!validatePincode(pincode)) {
+  if (!validatePincode(pincode)) {
+    setAddressError(
+      "Invalid pincode. Please enter a valid 6-digit Indian pincode"
+    );
+    setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
+    return;
+  }
+
+  try {
+    setIsPincodeLoading(true);
+
+    const response = await fetch(`/api/pincode/check?pincode=${pincode}`);
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
       setAddressError(
-        "Invalid pincode. Please enter a valid 6-digit Indian pincode"
+        result.message || "Invalid pincode. Please enter a correct Indian pincode"
       );
       setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
       return;
     }
 
-    try {
-      setIsPincodeLoading(true);
-      const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
-      const data = await response.json();
+    const location = result.data;
 
-      if (data[0]?.Status !== "Success") {
-        setAddressError(
-          "Invalid pincode. Please enter a correct Indian pincode"
-        );
-        setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
-        return;
-      }
-
-      const postOffice = data[0]?.PostOffice[0];
-      if (postOffice) {
-        if (type === "shipping") {
-          setNewAddress((prev) => ({
-            ...prev,
-            state: postOffice.State,
-            city: postOffice.District,
-            country: "India",
-          }));
-        } else {
-          setNewBillingAddress((prev) => ({
-            ...prev,
-            state: postOffice.State,
-            city: postOffice.District,
-            country: "India",
-          }));
-        }
-        setIsPincodeVerified((prev) => ({ ...prev, [type]: true }));
-        setAddressError("");
-      }
-    } catch (error) {
-      setAddressError("Failed to verify pincode. Please try again.");
-      setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
-      console.error("Pincode API error:", error);
-    } finally {
-      setIsPincodeLoading(false);
+    if (type === "shipping") {
+      setNewAddress((prev) => ({
+        ...prev,
+        state: location.state,
+        city: location.city,
+        country: location.country || "India",
+      }));
+    } else {
+      setNewBillingAddress((prev) => ({
+        ...prev,
+        state: location.state,
+        city: location.city,
+        country: location.country || "India",
+      }));
     }
-  };
+
+    setIsPincodeVerified((prev) => ({ ...prev, [type]: true }));
+    setAddressError("");
+  } catch (error) {
+    setAddressError("Failed to verify pincode. Please try again.");
+    setIsPincodeVerified((prev) => ({ ...prev, [type]: false }));
+    console.error("Pincode API error:", error);
+  } finally {
+    setIsPincodeLoading(false);
+  }
+};
 
   const handleNewAddressChange = (e) => {
     const { name, value } = e.target;
